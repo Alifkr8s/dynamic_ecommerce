@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
+<<<<<<< HEAD
+=======
+use Illuminate\Validation\ValidationException;
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\View\View;
 
 class NewPasswordController extends Controller
@@ -26,7 +30,11 @@ class NewPasswordController extends Controller
     /**
      * Handle an incoming new password request.
      *
+<<<<<<< HEAD
      * @throws \Illuminate\Validation\ValidationException
+=======
+     * @throws ValidationException
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function store(Request $request): RedirectResponse
     {

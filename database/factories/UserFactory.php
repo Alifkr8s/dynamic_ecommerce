@@ -2,12 +2,20 @@
 
 namespace Database\Factories;
 
+<<<<<<< HEAD
+=======
+use App\Models\User;
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
+<<<<<<< HEAD
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+=======
+ * @extends Factory<User>
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
  */
 class UserFactory extends Factory
 {

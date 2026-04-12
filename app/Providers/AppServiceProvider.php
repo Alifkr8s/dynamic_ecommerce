@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Schema;
+=======
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,7 +23,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+<<<<<<< HEAD
         // Fix for older MySQL versions (optional but safe)
         Schema::defaultStringLength(191);
     }
 }
+=======
+        //
+    }
+}
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0

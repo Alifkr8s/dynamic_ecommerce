@@ -6,6 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+<<<<<<< HEAD
+=======
+use Illuminate\Validation\ValidationException;
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -21,7 +25,11 @@ class PasswordResetLinkController extends Controller
     /**
      * Handle an incoming password reset link request.
      *
+<<<<<<< HEAD
      * @throws \Illuminate\Validation\ValidationException
+=======
+     * @throws ValidationException
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function store(Request $request): RedirectResponse
     {

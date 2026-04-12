@@ -3,6 +3,10 @@
 namespace App\Http\Requests\Auth;
 
 use Illuminate\Auth\Events\Lockout;
+<<<<<<< HEAD
+=======
+use Illuminate\Contracts\Validation\ValidationRule;
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -22,7 +26,11 @@ class LoginRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
+<<<<<<< HEAD
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+=======
+     * @return array<string, ValidationRule|array<mixed>|string>
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function rules(): array
     {
@@ -35,7 +43,11 @@ class LoginRequest extends FormRequest
     /**
      * Attempt to authenticate the request's credentials.
      *
+<<<<<<< HEAD
      * @throws \Illuminate\Validation\ValidationException
+=======
+     * @throws ValidationException
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function authenticate(): void
     {
@@ -55,7 +67,11 @@ class LoginRequest extends FormRequest
     /**
      * Ensure the login request is not rate limited.
      *
+<<<<<<< HEAD
      * @throws \Illuminate\Validation\ValidationException
+=======
+     * @throws ValidationException
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function ensureIsNotRateLimited(): void
     {

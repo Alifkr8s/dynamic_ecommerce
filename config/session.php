@@ -34,8 +34,13 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 120),
 
+<<<<<<< HEAD
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
+=======
+    //'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+'expire_on_close' => true,
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
     /*
     |--------------------------------------------------------------------------
     | Session Encryption
@@ -214,4 +219,23 @@ return [
 
     'partitioned' => env('SESSION_PARTITIONED_COOKIE', false),
 
+<<<<<<< HEAD
+=======
+    /*
+    |--------------------------------------------------------------------------
+    | Session Serialization
+    |--------------------------------------------------------------------------
+    |
+    | This value controls the serialization strategy for session data, which
+    | is JSON by default. Setting this to "php" allows the storage of PHP
+    | objects in the session but can make an application vulnerable to
+    | "gadget chain" serialization attacks if the APP_KEY is leaked.
+    |
+    | Supported: "json", "php"
+    |
+    */
+
+    'serialization' => 'json',
+
+>>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 ];
