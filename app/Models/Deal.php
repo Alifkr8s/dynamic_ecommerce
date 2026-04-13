@@ -2,29 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class Deal extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'vendor_id',
-        'product_id',
-        'title',
-        'description',
+        'product_name',
+        'base_price',
         'min_participants',
-        'current_participants',
-        'current_price',
-        'deadline',
-        'status',
+        'end_time'
     ];
 
     protected $casts = [
-        'current_price' => 'decimal:2',
-        'deadline'      => 'datetime',
+        'base_price' => 'decimal:2',
+        'end_time'   => 'datetime',
     ];
 
     /*
@@ -33,76 +26,54 @@ class Deal extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function vendor()
-    {
-        return $this->belongsTo(Vendor::class);
-    }
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
-
-    public function tiers()
-    {
-        return $this->hasMany(DealTier::class)->orderBy('min_count', 'asc');
-    }
-
     public function participants()
     {
-        return $this->hasMany(DealParticipant::class);
-    }
-
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(User::class, 'deal_user');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Status Helpers
+    | Dynamic Pricing
     |--------------------------------------------------------------------------
     */
 
-    public function isActive()
+    public function getCurrentPriceAttribute()
     {
-        return $this->status === 'active';
-    }
+        $participantCount = $this->participants()->count();
 
-    public function isPending()
-    {
-        return $this->status === 'pending';
-    }
+        $tier = DB::table('price_tiers')
+            ->where('deal_id', $this->id)
+            ->where('min_participants', '<=', $participantCount)
+            ->orderBy('min_participants', 'desc')
+            ->first();
 
-    public function isCancelled()
-    {
-        return $this->status === 'cancelled';
-    }
-
-    public function isCompleted()
-    {
-        return $this->status === 'completed';
+        return $tier ? $tier->tier_price : $this->base_price;
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Time & Condition Helpers
+    | Helpers
     |--------------------------------------------------------------------------
     */
+
+    public function participantCount()
+    {
+        return $this->participants()->count();
+    }
 
     public function isExpired()
     {
-        return Carbon::now()->greaterThan($this->deadline);
+        return Carbon::now()->greaterThan($this->end_time);
     }
 
     public function isGoalReached()
     {
-        return $this->current_participants >= $this->min_participants;
+        return $this->participantCount() >= $this->min_participants;
     }
 
     public function remainingSlots()
     {
-        return max(0, $this->min_participants - $this->current_participants);
+        return max(0, $this->min_participants - $this->participantCount());
     }
 
     public function deadlineCountdown()
@@ -111,32 +82,7 @@ class Deal extends Model
             return 'Expired';
         }
 
-        return Carbon::now()->diff($this->deadline)->format('%d days %H hrs %I mins');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Dynamic Pricing (IMPORTANT 🔥)
-    |--------------------------------------------------------------------------
-    */
-
-    public function calculateCurrentPrice()
-    {
-        $tiers = $this->tiers()->orderBy('min_count', 'desc')->get();
-
-        foreach ($tiers as $tier) {
-            if ($this->current_participants >= $tier->min_count) {
-                return $tier->price;
-            }
-        }
-
-        return $this->product->base_price;
-    }
-
-    // ✅ ACCESSOR (VERY IMPORTANT - for Blade/UI)
-    public function getCurrentPriceAttribute()
-    {
-        return $this->calculateCurrentPrice();
+        return Carbon::now()->diff($this->end_time)->format('%d days %H hrs %I mins');
     }
 
     /*
@@ -147,13 +93,7 @@ class Deal extends Model
 
     public function checkAndCancel()
     {
-        if (
-            $this->isExpired() &&
-            !$this->isGoalReached() &&
-            !$this->isCancelled() &&
-            !$this->isCompleted()
-        ) {
-            $this->update(['status' => 'cancelled']);
+        if ($this->isExpired() && !$this->isGoalReached()) {
             return true;
         }
 
