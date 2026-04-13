@@ -1,99 +1,118 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+    <title>Dashboard | GroupBuy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Dashboard</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom Style -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #e4ecf7);
+        }
 
+        .card {
+            border: none;
+            border-radius: 15px;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .welcome-box {
+            padding: 40px;
+        }
+
+        .btn-custom {
+            border-radius: 30px;
+            padding: 10px 25px;
+        }
+    </style>
 </head>
 
-<body class="bg-light">
+<body>
 
-<nav class="navbar navbar-dark bg-dark">
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark bg-dark shadow">
+    <div class="container d-flex justify-content-between">
 
-<div class="container">
+        <span class="navbar-brand">🚀 GroupBuy</span>
 
-<a class="navbar-brand">GroupBuy Platform</a>
+        <div>
+            <span class="text-white me-3">
+                👋 {{ Auth::user()->name }}
+            </span>
 
-<div>
+            <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                @csrf
+                <button class="btn btn-danger btn-sm">Logout</button>
+            </form>
+        </div>
 
-<span class="text-white me-3">
-
-Welcome, {{ Auth::user()->name }}
-
-</span>
-
-<form method="POST" action="{{ route('logout') }}" class="d-inline">
-
-@csrf
-
-<button class="btn btn-danger btn-sm">
-Logout
-</button>
-
-</form>
-
-</div>
-
-</div>
-
+    </div>
 </nav>
 
-
+<!-- DASHBOARD -->
 <div class="container mt-5">
 
-<div class="card shadow">
+    <div class="card shadow-lg">
+        <div class="card-body text-center welcome-box">
 
-<div class="card-header bg-primary text-white">
+            <h2 class="fw-bold text-primary mb-3">
+                Welcome to Your Dashboard 🎉
+            </h2>
 
-Dashboard
+            <p class="text-muted mb-4">
+                Manage your deals, track group participation, and unlock better pricing.
+            </p>
 
-</div>
+            <div class="d-flex justify-content-center gap-3">
 
-<div class="card-body text-center">
+                <a href="/deal/1" class="btn btn-success btn-custom">
+                    🔥 View Live Deal
+                </a>
 
-<h4>You are logged in!</h4>
+                <a href="/demo-deal" class="btn btn-outline-primary btn-custom">
+                    📊 Demo Deal
+                </a>
 
-<p class="text-muted">
+            </div>
 
-Welcome to your Dynamic Group Buying Platform.
+        </div>
+    </div>
 
-</p>
+    <!-- EXTRA SECTION -->
+    <div class="row mt-4 text-center">
 
-<a href="/deal/1" class="btn btn-success">
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <h5>👥 Participants</h5>
+                <p class="text-muted">Track live users joining deals</p>
+            </div>
+        </div>
 
-View Active Deal
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <h5>💸 Dynamic Pricing</h5>
+                <p class="text-muted">Price decreases as users join</p>
+            </div>
+        </div>
 
-</a>
+        <div class="col-md-4">
+            <div class="card shadow-sm p-3">
+                <h5>📦 Orders</h5>
+                <p class="text-muted">Manage your purchases easily</p>
+            </div>
+        </div>
 
-</div>
-
-</div>
+    </div>
 
 </div>
 
 </body>
-
 </html>
-=======
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
-                </div>
-            </div>
-        </div>
-    </div>
-</x-app-layout>
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
