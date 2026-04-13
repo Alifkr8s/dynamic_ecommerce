@@ -25,10 +25,19 @@ class Deal extends Model
     | Relationships
     |--------------------------------------------------------------------------
     */
-
     public function participants()
     {
         return $this->belongsToMany(User::class, 'deal_user');
+    }
+
+    // ✅ ADD THIS METHOD
+    public function product()
+    {
+        // If you have a Product model and product_id column, use this:
+        // return $this->belongsTo(Product::class);
+
+        // Since you are currently storing product_name directly, return null or handle it
+        return null; 
     }
 
     /*
@@ -36,11 +45,10 @@ class Deal extends Model
     | Dynamic Pricing
     |--------------------------------------------------------------------------
     */
-
     public function getCurrentPriceAttribute()
     {
         $participantCount = $this->participants()->count();
-
+        
         $tier = DB::table('price_tiers')
             ->where('deal_id', $this->id)
             ->where('min_participants', '<=', $participantCount)
@@ -55,7 +63,6 @@ class Deal extends Model
     | Helpers
     |--------------------------------------------------------------------------
     */
-
     public function participantCount()
     {
         return $this->participants()->count();
@@ -81,22 +88,14 @@ class Deal extends Model
         if ($this->isExpired()) {
             return 'Expired';
         }
-
         return Carbon::now()->diff($this->end_time)->format('%d days %H hrs %I mins');
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Auto Cancel Logic
-    |--------------------------------------------------------------------------
-    */
 
     public function checkAndCancel()
     {
         if ($this->isExpired() && !$this->isGoalReached()) {
             return true;
         }
-
         return false;
     }
 }
