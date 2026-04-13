@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class Deal extends Model
 {
@@ -16,16 +15,31 @@ class Deal extends Model
         'end_time'
     ];
 
-    // Participants relationship
-    public function users(): BelongsToMany
+    protected $casts = [
+        'base_price' => 'decimal:2',
+        'end_time'   => 'datetime',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function participants()
     {
         return $this->belongsToMany(User::class, 'deal_user');
     }
 
-    // ✅ ACCESSOR (BEST PRACTICE)
+    /*
+    |--------------------------------------------------------------------------
+    | Dynamic Pricing
+    |--------------------------------------------------------------------------
+    */
+
     public function getCurrentPriceAttribute()
     {
-        $participantCount = $this->users()->count();
+        $participantCount = $this->participants()->count();
 
         $tier = DB::table('price_tiers')
             ->where('deal_id', $this->id)
@@ -34,92 +48,32 @@ class Deal extends Model
             ->first();
 
         return $tier ? $tier->tier_price : $this->base_price;
-=======
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
-
-class Deal extends Model
-{
-    use HasFactory;
-
-    protected $fillable = [
-        'vendor_id',
-        'product_id',
-        'title',
-        'description',
-        'min_participants',
-        'current_participants',
-        'current_price',
-        'deadline',
-        'status',
-    ];
-
-    protected $casts = [
-        'current_price' => 'decimal:2',
-        'deadline'      => 'datetime',
-    ];
-
-    // Relationships
-    public function vendor()
-    {
-        return $this->belongsTo(Vendor::class);
     }
 
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
 
-    public function tiers()
+    public function participantCount()
     {
-        return $this->hasMany(DealTier::class)->orderBy('min_count', 'asc');
-    }
-
-    public function participants()
-    {
-        return $this->hasMany(DealParticipant::class);
-    }
-
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    // Helpers
-    public function isActive()
-    {
-        return $this->status === 'active';
-    }
-
-    public function isPending()
-    {
-        return $this->status === 'pending';
-    }
-
-    public function isCancelled()
-    {
-        return $this->status === 'cancelled';
-    }
-
-    public function isCompleted()
-    {
-        return $this->status === 'completed';
+        return $this->participants()->count();
     }
 
     public function isExpired()
     {
-        return Carbon::now()->greaterThan($this->deadline);
+        return Carbon::now()->greaterThan($this->end_time);
     }
 
     public function isGoalReached()
     {
-        return $this->current_participants >= $this->min_participants;
+        return $this->participantCount() >= $this->min_participants;
     }
 
     public function remainingSlots()
     {
-        return max(0, $this->min_participants - $this->current_participants);
+        return max(0, $this->min_participants - $this->participantCount());
     }
 
     public function deadlineCountdown()
@@ -127,28 +81,22 @@ class Deal extends Model
         if ($this->isExpired()) {
             return 'Expired';
         }
-        return Carbon::now()->diff($this->deadline)->format('%d days %H hrs %I mins');
+
+        return Carbon::now()->diff($this->end_time)->format('%d days %H hrs %I mins');
     }
 
-    public function calculateCurrentPrice()
-    {
-        $tiers = $this->tiers()->orderBy('min_count', 'desc')->get();
-        foreach ($tiers as $tier) {
-            if ($this->current_participants >= $tier->min_count) {
-                return $tier->price;
-            }
-        }
-        return $this->product->base_price;
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Auto Cancel Logic
+    |--------------------------------------------------------------------------
+    */
 
-    // Auto cancel if expired and min not reached
     public function checkAndCancel()
     {
-        if ($this->isExpired() && !$this->isGoalReached() && !$this->isCancelled() && !$this->isCompleted()) {
-            $this->update(['status' => 'cancelled']);
+        if ($this->isExpired() && !$this->isGoalReached()) {
             return true;
         }
+
         return false;
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
     }
 }

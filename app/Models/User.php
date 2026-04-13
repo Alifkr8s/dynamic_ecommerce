@@ -5,67 +5,41 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-<<<<<<< HEAD
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-=======
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-<<<<<<< HEAD
-    /**
-     * The attributes that are mass assignable.
-     */
-=======
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
     protected $fillable = [
         'name',
         'email',
         'password',
-<<<<<<< HEAD
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     */
-=======
         'role',
         'email_verified_at',
     ];
 
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-<<<<<<< HEAD
-    /**
-     * Get the attributes that should be cast.
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
-
-    /**
-     * RELATIONSHIP FOR APURBO'S MODULE:
-     * This allows us to track which deals a user has joined.
-     * It is essential for "Real-Time Participant Tracking".
-     */
-    public function deals(): BelongsToMany
-    {
-        return $this->belongsToMany(Deal::class);
-=======
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
+        'password' => 'hashed',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    // 🔥 IMPORTANT: Your group buying logic
+    public function deals(): BelongsToMany
+    {
+        return $this->belongsToMany(Deal::class, 'deal_user');
+    }
 
     public function vendor()
     {
@@ -92,6 +66,12 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Role Helpers
+    |--------------------------------------------------------------------------
+    */
+
     public function isAdmin()
     {
         return $this->role === 'admin';
@@ -105,6 +85,5 @@ class User extends Authenticatable
     public function isBuyer()
     {
         return $this->role === 'user';
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
     }
 }

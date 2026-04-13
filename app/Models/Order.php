@@ -2,18 +2,11 @@
 
 namespace App\Models;
 
-<<<<<<< HEAD
-=======
 use Illuminate\Database\Eloquent\Factories\HasFactory;
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-<<<<<<< HEAD
-    //
-}
-=======
     use HasFactory;
 
     protected $fillable = [
@@ -63,4 +56,3 @@ class Order extends Model
         return $this->status === 'cancelled';
     }
 }
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0

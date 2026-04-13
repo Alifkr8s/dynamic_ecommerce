@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class DealController extends Controller
 {
 
-    // Show Deal Page
+    // -------------------- SHOW DEAL --------------------
     public function show($id)
     {
         $deal = Deal::find($id);
@@ -26,7 +26,7 @@ class DealController extends Controller
     }
 
 
-    // API (optional)
+    // -------------------- API --------------------
     public function getDeal($id)
     {
         $deal = Deal::find($id);
@@ -48,27 +48,58 @@ class DealController extends Controller
     }
 
 
-    // ✅ FIXED JOIN DEAL (NO DUPLICATES)
+    // -------------------- JOIN DEAL --------------------
     public function joinDeal(Request $request)
     {
-        // Check if user already joined
+        // Check if already joined
         $exists = DB::table('deal_user')
             ->where('user_id', $request->user_id)
             ->where('deal_id', $request->deal_id)
             ->exists();
 
-        // If already joined
         if ($exists) {
             return redirect()->back()->with('status', 'You already joined this deal!');
         }
 
-        // Insert if not joined
         DB::table('deal_user')->insert([
             'user_id' => $request->user_id,
             'deal_id' => $request->deal_id
         ]);
 
         return redirect()->back()->with('status', 'Joined successfully!');
+    }
+
+
+    // -------------------- DEMO DEAL --------------------
+    public function demoDeal()
+    {
+        $deal = Deal::first();
+
+        if (!$deal) {
+            return "No deal available!";
+        }
+
+        $participants = DB::table('deal_user')
+            ->where('deal_id', $deal->id)
+            ->count();
+
+        return view('deal_details', compact('deal', 'participants'));
+    }
+
+
+    // -------------------- ✅ NEW: PARTICIPANTS PAGE --------------------
+    public function participantsPage()
+    {
+        $participants = DB::table('deal_user')
+            ->join('users', 'deal_user.user_id', '=', 'users.id')
+            ->select(
+                'users.name',
+                'users.email',
+                'deal_user.deal_id'
+            )
+            ->get();
+
+        return view('participants', compact('participants'));
     }
 
 }
