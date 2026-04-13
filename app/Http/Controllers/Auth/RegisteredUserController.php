@@ -10,10 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-<<<<<<< HEAD
-=======
 use Illuminate\Validation\ValidationException;
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
@@ -29,11 +26,7 @@ class RegisteredUserController extends Controller
     /**
      * Handle an incoming registration request.
      *
-<<<<<<< HEAD
-     * @throws \Illuminate\Validation\ValidationException
-=======
      * @throws ValidationException
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
      */
     public function store(Request $request): RedirectResponse
     {
