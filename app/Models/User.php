@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -25,8 +26,20 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password'          => 'hashed',
+        'password' => 'hashed',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    // 🔥 IMPORTANT: Your group buying logic
+    public function deals(): BelongsToMany
+    {
+        return $this->belongsToMany(Deal::class, 'deal_user');
+    }
 
     public function vendor()
     {
@@ -52,6 +65,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Role Helpers
+    |--------------------------------------------------------------------------
+    */
 
     public function isAdmin()
     {
