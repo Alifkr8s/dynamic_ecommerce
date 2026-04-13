@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Vendor\VendorDealController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,110 +13,80 @@ use App\Http\Controllers\PaymentController;
 |--------------------------------------------------------------------------
 */
 
-
-// Home page
+// Home Page
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('welcome'); // or 'home' if you prefer
+})->name('home');
 
+
+// -------------------- DEAL SYSTEM --------------------
 
 // Demo Deal Page
 Route::get('/demo-deal', [DealController::class, 'demoDeal'])->name('demo.deal');
 
-
 // Show deal details
 Route::get('/deal/{id}', [DealController::class, 'show'])->name('deal.show');
 
-
 // Join deal
 Route::post('/deal/join', [DealController::class, 'joinDeal'])->name('deal.join');
-
 
 // Real-time participant API
 Route::get('/deal/{id}/participants', [DealController::class, 'participants']);
 
 
-// Payment request
+// -------------------- PAYMENT --------------------
+
 Route::post('/payment/request', [PaymentController::class, 'store'])->name('payment.request');
-
-
-// Admin approve payment (API)
 Route::put('/admin/payment/approve/{id}', [PaymentController::class, 'approve'])->name('payment.approve');
 
 
-// Dashboard
+// -------------------- DASHBOARD --------------------
+
 Route::get('/dashboard', function () {
+    $user = auth()->user();
+
+    if ($user->role === 'vendor') {
+        return redirect()->route('vendor.deals.index');
+    }
+
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 
-// Profile
+// -------------------- PROFILE --------------------
+
 Route::middleware('auth')->group(function () {
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
 });
 
 
-// -------------------- ADMIN ROUTES --------------------
+// -------------------- ADMIN --------------------
 
-
-// Admin Login Page
 Route::get('/admin/login',[AdminController::class,'loginPage'])->name('admin.login');
+Route::post('/admin/login',[AdminController::class,'login');
 
-
-// Admin Login Action
-Route::post('/admin/login',[AdminController::class,'login']);
-
-
-// Admin Dashboard
 Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
-
-
-// Approve Payment from Dashboard
 Route::post('/admin/orders/{id}/approve', [AdminController::class, 'approve'])->name('admin.approve');
 
-
-// Generate Payment Bill
 Route::get('/admin/bill/{id}', [AdminController::class,'bill'])->name('admin.bill');
 
-
-// Admin Logout
 Route::get('/admin/logout',[AdminController::class,'logout'])->name('admin.logout');
 
 
-// Authentication routes
-require __DIR__.'/auth.php';
-=======
-use App\Http\Controllers\Vendor\VendorDealController;
+// -------------------- VENDOR --------------------
 
-// Home Page
-Route::get('/', function () {
-    return view('home');
-})->name('home');
+Route::middleware(['auth'])->prefix('vendor')->name('vendor.')->group(function () {
+    Route::resource('deals', VendorDealController::class);
 
-// Dashboard — redirects based on role after login
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    if ($user->role === 'vendor') {
-        return redirect()->route('vendor.deals.index');
-    } elseif ($user->role === 'admin') {
-        return redirect()->route('home');
-    } else {
-        return redirect()->route('home');
-    }
-})->middleware(['auth'])->name('dashboard');
+    Route::post('notifications/{id}/read', [VendorDealController::class, 'markNotificationRead'])
+        ->name('notifications.read');
+});
 
-// Auth Routes
-if (file_exists(__DIR__.'/auth.php')) {
-    require __DIR__.'/auth.php';
-}
 
-// Force logout route
+// -------------------- UTILITY --------------------
+
 Route::get('/logout-now', function () {
     auth()->logout();
     request()->session()->invalidate();
@@ -124,7 +94,6 @@ Route::get('/logout-now', function () {
     return redirect('/');
 });
 
-// Clear session route
 Route::get('/clear-session', function () {
     auth()->logout();
     request()->session()->invalidate();
@@ -132,10 +101,6 @@ Route::get('/clear-session', function () {
     return redirect('/');
 });
 
-// Vendor Routes
-Route::middleware(['auth'])->prefix('vendor')->name('vendor.')->group(function () {
-    Route::resource('deals', VendorDealController::class);
-    Route::post('notifications/{id}/read', [VendorDealController::class, 'markNotificationRead'])
-         ->name('notifications.read');
-});
->>>>>>> 53ee8e9e6af63cef39947ec0d1f997481c465bc0
+
+// Auth routes
+require __DIR__.'/auth.php';
