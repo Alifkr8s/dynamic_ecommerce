@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DealController;
 use App\Http\Controllers\AdminController;
@@ -13,9 +14,10 @@ use App\Http\Controllers\Vendor\VendorDealController;
 |--------------------------------------------------------------------------
 */
 
-// Home Page
+// -------------------- HOME --------------------
+
 Route::get('/', function () {
-    return view('welcome'); // or 'home' if you prefer
+    return view('welcome');
 })->name('home');
 
 
@@ -51,6 +53,49 @@ Route::get('/dashboard', function () {
 
     return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
+
+
+// -------------------- FEATURE PAGES --------------------
+
+// ✅ PARTICIPANTS (REAL DATA)
+Route::get('/participants', [DealController::class, 'participantsPage'])
+    ->middleware('auth')
+    ->name('participants.page');
+
+
+// ✅ DYNAMIC PRICING (REAL LOGIC)
+Route::get('/pricing', function () {
+
+    $participants = DB::table('deal_user')->count();
+
+    if ($participants <= 5) {
+        $price = 1000;
+    } elseif ($participants <= 10) {
+        $price = 900;
+    } elseif ($participants <= 20) {
+        $price = 800;
+    } else {
+        $price = 700;
+    }
+
+    return view('pricing', [
+        'participants' => $participants,
+        'currentPrice' => $price
+    ]);
+
+})->middleware('auth')->name('pricing.page');
+
+
+// ✅ ORDERS (REAL USER DATA)
+Route::get('/orders', function () {
+
+    $orders = DB::table('orders')
+        ->where('user_id', auth()->id())
+        ->get();
+
+    return view('orders', compact('orders'));
+
+})->middleware('auth')->name('orders.page');
 
 
 // -------------------- PROFILE --------------------
@@ -102,5 +147,6 @@ Route::get('/clear-session', function () {
 });
 
 
-// Auth routes
+// -------------------- AUTH --------------------
+
 require __DIR__.'/auth.php';

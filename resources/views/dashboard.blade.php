@@ -17,6 +17,12 @@
         .card {
             border: none;
             border-radius: 15px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
 
         .navbar-brand {
@@ -31,6 +37,11 @@
         .btn-custom {
             border-radius: 30px;
             padding: 10px 25px;
+        }
+
+        a.card-link {
+            text-decoration: none;
+            color: inherit;
         }
     </style>
 </head>
@@ -60,6 +71,7 @@
 <!-- DASHBOARD -->
 <div class="container mt-5">
 
+    <!-- MAIN CARD -->
     <div class="card shadow-lg">
         <div class="card-body text-center welcome-box">
 
@@ -86,28 +98,37 @@
         </div>
     </div>
 
-    <!-- EXTRA SECTION -->
+    <!-- FEATURE CARDS -->
     <div class="row mt-4 text-center">
 
+        <!-- PARTICIPANTS -->
         <div class="col-md-4">
-            <div class="card shadow-sm p-3">
-                <h5>👥 Participants</h5>
-                <p class="text-muted">Track live users joining deals</p>
-            </div>
+            <a href="{{ route('participants.page') }}" class="card-link">
+                <div class="card shadow-sm p-3">
+                    <h5>👥 Participants</h5>
+                    <p class="text-muted">Track live users joining deals</p>
+                </div>
+            </a>
         </div>
 
+        <!-- PRICING -->
         <div class="col-md-4">
-            <div class="card shadow-sm p-3">
-                <h5>💸 Dynamic Pricing</h5>
-                <p class="text-muted">Price decreases as users join</p>
-            </div>
+            <a href="{{ route('pricing.page') }}" class="card-link">
+                <div class="card shadow-sm p-3">
+                    <h5>💸 Dynamic Pricing</h5>
+                    <p class="text-muted">Price decreases as users join</p>
+                </div>
+            </a>
         </div>
 
+        <!-- ORDERS -->
         <div class="col-md-4">
-            <div class="card shadow-sm p-3">
-                <h5>📦 Orders</h5>
-                <p class="text-muted">Manage your purchases easily</p>
-            </div>
+            <a href="{{ route('orders.page') }}" class="card-link">
+                <div class="card shadow-sm p-3">
+                    <h5>📦 Orders</h5>
+                    <p class="text-muted">Manage your purchases easily</p>
+                </div>
+            </a>
         </div>
 
     </div>
