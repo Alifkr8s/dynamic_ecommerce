@@ -65,7 +65,7 @@ Route::middleware('auth')->group(function () {
 // -------------------- ADMIN --------------------
 
 Route::get('/admin/login',[AdminController::class,'loginPage'])->name('admin.login');
-Route::post('/admin/login',[AdminController::class,'login');
+Route::post('/admin/login',[AdminController::class,'login']);
 
 Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
 Route::post('/admin/orders/{id}/approve', [AdminController::class, 'approve'])->name('admin.approve');
