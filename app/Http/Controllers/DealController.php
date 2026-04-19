@@ -43,7 +43,9 @@ class DealController extends Controller
 
         return response()->json([
             'deal_id' => $deal->id,
-            'participants' => $participants
+            'participants' => $participants,
+            'min_participants' => $deal->min_participants,
+            'end_time' => $deal->end_time
         ]);
     }
 
@@ -51,22 +53,45 @@ class DealController extends Controller
     // -------------------- JOIN DEAL --------------------
     public function joinDeal(Request $request)
     {
-        // Check if already joined
+        $deal = Deal::find($request->deal_id);
+
+        if (!$deal) {
+            return redirect()->back()->with('status', 'Deal not found!');
+        }
+
+        // prevent expired join
+        if ($deal->end_time && now()->greaterThan($deal->end_time)) {
+            return redirect()->back()->with('status', 'Deal expired!');
+        }
+
+        // prevent duplicate join
         $exists = DB::table('deal_user')
             ->where('user_id', $request->user_id)
             ->where('deal_id', $request->deal_id)
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('status', 'You already joined this deal!');
+            return redirect()->back()->with('status', 'You already joined!');
         }
 
+        // insert into deal_user
         DB::table('deal_user')->insert([
             'user_id' => $request->user_id,
             'deal_id' => $request->deal_id
         ]);
 
-        return redirect()->back()->with('status', 'Joined successfully!');
+        // 🔥 FIXED: use base_price
+        DB::table('orders')->insert([
+            'user_id' => $request->user_id,
+            'deal_id' => $request->deal_id,
+            'amount' => $deal->base_price, // ✅ FIX HERE
+            'status' => 'pending',
+            'payment_status' => 'unpaid',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return redirect()->back()->with('status', 'Joined & Order Created!');
     }
 
 
@@ -87,7 +112,7 @@ class DealController extends Controller
     }
 
 
-    // -------------------- ✅ NEW: PARTICIPANTS PAGE --------------------
+    // -------------------- PARTICIPANTS PAGE --------------------
     public function participantsPage()
     {
         $participants = DB::table('deal_user')
