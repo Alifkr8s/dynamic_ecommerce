@@ -3,76 +3,98 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
 
-    // Show admin login page
+    // -------------------- LOGIN --------------------
     public function loginPage()
     {
         return view('admin_login');
     }
 
-    // Handle admin login
     public function login(Request $request)
     {
-
-        if($request->email == "admin@gmail.com" && $request->password == "admin123"){
+        if ($request->email == "admin@gmail.com" && $request->password == "admin123") {
             session(['admin_logged_in' => true]);
-
             return redirect('/admin/orders');
         }
 
-        return back()->with('error','Invalid admin credentials');
+        return back()->with('error', 'Invalid admin credentials');
     }
 
-    // Admin payment dashboard
+
+    // -------------------- ADMIN DASHBOARD (ORDERS) --------------------
     public function orders()
     {
-        if(!session('admin_logged_in')){
+        if (!session('admin_logged_in')) {
             return redirect('/admin/login');
         }
 
-        $payments = Payment::all();
+        // ✅ FETCH ORDERS (NOT PAYMENTS)
+        $orders = DB::table('orders')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->select(
+                'orders.*',
+                'users.name as user_name',
+                'users.email as user_email'
+            )
+            ->get();
 
-        return view('admin_orders', compact('payments'));
+        return view('admin_orders', compact('orders'));
     }
 
-    // Approve payment
+
+    // -------------------- APPROVE ORDER --------------------
     public function approve($id)
     {
-        $payment = Payment::find($id);
-
-        if(!$payment){
-            return back()->with('status','Payment not found');
-        }
-
-        $payment->status = 'approved';
-        $payment->save();
-
-        return back()->with('status','Payment approved');
-    }
-
-    // Generate bill
-    public function bill($id)
-    {
-
-        if(!session('admin_logged_in')){
+        if (!session('admin_logged_in')) {
             return redirect('/admin/login');
         }
 
-        $payment = Payment::find($id);
+        $order = DB::table('orders')->where('id', $id)->first();
 
-        return view('payment_bill', compact('payment'));
+        if (!$order) {
+            return back()->with('status', 'Order not found');
+        }
 
+        // ✅ UPDATE ORDER STATUS
+        DB::table('orders')
+            ->where('id', $id)
+            ->update([
+                'status' => 'approved'
+            ]);
+
+        return back()->with('status', 'Order approved! User can now pay.');
     }
 
-    // Logout admin
+
+    // -------------------- BILL --------------------
+    public function bill($id)
+    {
+        if (!session('admin_logged_in')) {
+            return redirect('/admin/login');
+        }
+
+        $order = DB::table('orders')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->select(
+                'orders.*',
+                'users.name as user_name',
+                'users.email as user_email'
+            )
+            ->where('orders.id', $id)
+            ->first();
+
+        return view('payment_bill', compact('order'));
+    }
+
+
+    // -------------------- LOGOUT --------------------
     public function logout()
     {
         session()->forget('admin_logged_in');
-
         return redirect('/admin/login');
     }
 
