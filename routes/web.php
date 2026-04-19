@@ -1,12 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\DB;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\DealController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Vendor\VendorDealController;
+use App\Http\Controllers\Api\DealTrackingController;
+use App\Http\Controllers\Payment\PaymentController;
+use App\Http\Controllers\Admin\AdminPaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,124 +12,68 @@ use App\Http\Controllers\Vendor\VendorDealController;
 |--------------------------------------------------------------------------
 */
 
-// -------------------- HOME --------------------
-
+// ==================== PUBLIC ROUTES ====================
 Route::get('/', function () {
-    return view('welcome');
+    return view('home');
 })->name('home');
 
-
-// -------------------- DEAL SYSTEM --------------------
-
-// Demo Deal Page
-Route::get('/demo-deal', [DealController::class, 'demoDeal'])->name('demo.deal');
-
-// Show deal details
-Route::get('/deal/{id}', [DealController::class, 'show'])->name('deal.show');
-
-// Join deal
-Route::post('/deal/join', [DealController::class, 'joinDeal'])->name('deal.join');
-
-// Real-time participant API
-Route::get('/deal/{id}/participants', [DealController::class, 'participants']);
-
-
-// -------------------- PAYMENT --------------------
-
-Route::post('/payment/request', [PaymentController::class, 'store'])->name('payment.request');
-Route::put('/admin/payment/approve/{id}', [PaymentController::class, 'approve'])->name('payment.approve');
-
-
-// -------------------- DASHBOARD --------------------
-
+// ==================== DASHBOARD ====================
 Route::get('/dashboard', function () {
     $user = auth()->user();
-
     if ($user->role === 'vendor') {
         return redirect()->route('vendor.deals.index');
+    } elseif ($user->role === 'admin') {
+        return redirect()->route('admin.payments.index');
+    } else {
+        return redirect()->route('home');
     }
-
-    return view('dashboard');
 })->middleware(['auth'])->name('dashboard');
 
-
-// -------------------- FEATURE PAGES --------------------
-
-// ✅ PARTICIPANTS (REAL DATA)
-Route::get('/participants', [DealController::class, 'participantsPage'])
-    ->middleware('auth')
-    ->name('participants.page');
-
-
-// ✅ DYNAMIC PRICING (REAL LOGIC)
-Route::get('/pricing', function () {
-
-    $participants = DB::table('deal_user')->count();
-
-    if ($participants <= 5) {
-        $price = 1000;
-    } elseif ($participants <= 10) {
-        $price = 900;
-    } elseif ($participants <= 20) {
-        $price = 800;
-    } else {
-        $price = 700;
-    }
-
-    return view('pricing', [
-        'participants' => $participants,
-        'currentPrice' => $price
-    ]);
-
-})->middleware('auth')->name('pricing.page');
-
-
-// ✅ ORDERS (REAL USER DATA)
-Route::get('/orders', function () {
-
-    $orders = DB::table('orders')
-        ->where('user_id', auth()->id())
-        ->get();
-
-    return view('orders', compact('orders'));
-
-})->middleware('auth')->name('orders.page');
-
-
-// -------------------- PROFILE --------------------
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+// ==================== REAL-TIME DEAL TRACKING API ====================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/deals/{id}/status', [DealTrackingController::class, 'getDealStatus'])
+         ->name('api.deals.status');
 });
 
+// ==================== PAYMENT ROUTES (User) ====================
+Route::middleware(['auth'])->group(function () {
+    Route::get('/payment/checkout/{dealId}', [PaymentController::class, 'checkout'])
+         ->name('payment.checkout');
+    Route::post('/payment/create-intent', [PaymentController::class, 'createPaymentIntent'])
+         ->name('payment.create.intent');
+    Route::post('/payment/success', [PaymentController::class, 'paymentSuccess'])
+         ->name('payment.success');
+    Route::get('/payment/success/{orderId}', [PaymentController::class, 'successPage'])
+         ->name('payment.success.page');
+    Route::get('/payment/failed', [PaymentController::class, 'failedPage'])
+         ->name('payment.failed');
+});
 
-// -------------------- ADMIN --------------------
+// ==================== ADMIN ROUTES ====================
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/payments', [AdminPaymentController::class, 'index'])
+         ->name('payments.index');
+    Route::post('/payments/refund/{dealId}', [AdminPaymentController::class, 'refundDeal'])
+         ->name('payments.refund');
+    Route::post('/payments/release/{dealId}', [AdminPaymentController::class, 'releaseToVendor'])
+         ->name('payments.release');
+    Route::post('/payments/auto-refund', [AdminPaymentController::class, 'autoRefundFailedDeals'])
+         ->name('payments.auto.refund');
+});
 
-Route::get('/admin/login',[AdminController::class,'loginPage'])->name('admin.login');
-Route::post('/admin/login',[AdminController::class,'login']);
-
-Route::get('/admin/orders', [AdminController::class, 'orders'])->name('admin.orders');
-Route::post('/admin/orders/{id}/approve', [AdminController::class, 'approve'])->name('admin.approve');
-
-Route::get('/admin/bill/{id}', [AdminController::class,'bill'])->name('admin.bill');
-
-Route::get('/admin/logout',[AdminController::class,'logout'])->name('admin.logout');
-
-
-// -------------------- VENDOR --------------------
-
+// ==================== VENDOR ROUTES ====================
 Route::middleware(['auth'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::resource('deals', VendorDealController::class);
-
     Route::post('notifications/{id}/read', [VendorDealController::class, 'markNotificationRead'])
-        ->name('notifications.read');
+         ->name('notifications.read');
 });
 
+// ==================== AUTH ROUTES ====================
+if (file_exists(__DIR__.'/auth.php')) {
+    require __DIR__.'/auth.php';
+}
 
-// -------------------- UTILITY --------------------
-
+// ==================== UTILITY ROUTES ====================
 Route::get('/logout-now', function () {
     auth()->logout();
     request()->session()->invalidate();
@@ -145,8 +87,3 @@ Route::get('/clear-session', function () {
     request()->session()->regenerateToken();
     return redirect('/');
 });
-
-
-// -------------------- AUTH --------------------
-
-require __DIR__.'/auth.php';

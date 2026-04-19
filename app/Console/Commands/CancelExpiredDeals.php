@@ -5,22 +5,20 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Deal;
 use App\Models\Notification;
+use App\Http\Controllers\Payment\PaymentController;
 use Carbon\Carbon;
 
 class CancelExpiredDeals extends Command
 {
     protected $signature   = 'deals:cancel-expired';
-    protected $description = 'Automatically cancel deals that have passed deadline without meeting minimum participants';
+    protected $description = 'Automatically cancel expired deals and process refunds';
 
     public function handle()
     {
         $expiredDeals = Deal::whereIn('status', ['pending', 'active'])
                             ->where('deadline', '<', Carbon::now())
-                            ->where(function ($query) {
-                                $query->whereRaw('current_participants < min_participants')
-                                      ->orWhere('status', 'pending');
-                            })
-                            ->with(['participants.user', 'vendor.user'])
+                            ->whereRaw('current_participants < min_participants')
+                            ->with(['participants.user', 'vendor.user', 'orders.payment'])
                             ->get();
 
         if ($expiredDeals->isEmpty()) {
@@ -28,36 +26,43 @@ class CancelExpiredDeals extends Command
             return 0;
         }
 
+        $paymentController = new PaymentController();
+
         foreach ($expiredDeals as $deal) {
-            // Only cancel if min participants not reached
-            if ($deal->current_participants < $deal->min_participants) {
-                $deal->update(['status' => 'cancelled']);
+            $deal->update(['status' => 'cancelled']);
 
-                // Notify vendor
-                if ($deal->vendor && $deal->vendor->user) {
-                    Notification::create([
-                        'user_id' => $deal->vendor->user_id,
-                        'type'    => 'deal_cancelled',
-                        'message' => "Your deal \"{$deal->title}\" has been automatically cancelled because the minimum participant requirement was not met before the deadline.",
-                        'is_read' => false,
-                    ]);
+            // Auto-process refunds
+            foreach ($deal->orders as $order) {
+                if ($order->payment && $order->payment->isCompleted()) {
+                    $paymentController->processRefund($order->id);
+                    $this->info("Refunded order #{$order->id} for deal: {$deal->title}");
                 }
-
-                // Notify each participant
-                foreach ($deal->participants as $participant) {
-                    Notification::create([
-                        'user_id' => $participant->user_id,
-                        'type'    => 'deal_cancelled',
-                        'message' => "The deal \"{$deal->title}\" you joined has been cancelled because the minimum participants were not reached before the deadline.",
-                        'is_read' => false,
-                    ]);
-                }
-
-                $this->info("Cancelled deal: {$deal->title} (ID: {$deal->id})");
             }
+
+            // Notify vendor
+            if ($deal->vendor && $deal->vendor->user) {
+                Notification::create([
+                    'user_id' => $deal->vendor->user_id,
+                    'type'    => 'deal_cancelled',
+                    'message' => "Your deal \"{$deal->title}\" was automatically cancelled. All user payments have been refunded.",
+                    'is_read' => false,
+                ]);
+            }
+
+            // Notify participants
+            foreach ($deal->participants as $participant) {
+                Notification::create([
+                    'user_id' => $participant->user_id,
+                    'type'    => 'deal_cancelled',
+                    'message' => "The deal \"{$deal->title}\" was cancelled. Your payment has been automatically refunded.",
+                    'is_read' => false,
+                ]);
+            }
+
+            $this->info("Cancelled deal: {$deal->title}");
         }
 
-        $this->info('✅ Expired deals processed successfully.');
+        $this->info('✅ Done.');
         return 0;
     }
 }

@@ -2,56 +2,52 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
+        'order_id',
         'user_id',
-        'deal_id',
         'amount',
-        'payment_method',
-        'status'
+        'stripe_payment_id',
+        'stripe_payment_intent',
+        'stripe_charge_id',
+        'status',
+        'refund_id',
+        'refunded_at',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount'      => 'decimal:2',
+        'refunded_at' => 'datetime',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function deal()
+    public function isCompleted()
     {
-        return $this->belongsTo(Deal::class);
+        return $this->status === 'completed';
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Helpers
-    |--------------------------------------------------------------------------
-    */
-
-    public function isApproved()
+    public function isRefunded()
     {
-        return $this->status === 'approved';
+        return $this->status === 'refunded';
     }
 
     public function isPending()
     {
         return $this->status === 'pending';
-    }
-
-    public function isRejected()
-    {
-        return $this->status === 'rejected';
     }
 }
